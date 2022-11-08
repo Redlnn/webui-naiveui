@@ -14,7 +14,6 @@ const chartCanvas = ref() as Ref<HTMLCanvasElement>
 let chart: Chart
 
 onMounted(() => {
-  console.log(props.data)
   chart = new Chart(chartCanvas.value, {
     type: 'bar',
     data: props.data as ChartData<ChartType, DefaultDataPoint<ChartType>, unknown>,

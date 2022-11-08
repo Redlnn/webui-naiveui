@@ -25,12 +25,44 @@ export default [
         },
       },
       {
-        path: 'group',
-        component: () => import('@/views/group/index.vue'),
+        path: 'groups',
+        component: () => import('@/views/groups/index.vue'),
         name: '群列表',
         meta: {
           title: '群列表 | BBot Console',
         },
+        children: [
+          {
+            name: '群信息',
+            path: ':groupId(\\d+)',
+            component: () => import('@/views/groups/detail.vue'),
+            meta: {
+              name: '群组详细信息',
+              title: '群组详细信息 | BBot Console',
+              requireAuth: true,
+            },
+          },
+        ],
+      },
+      {
+        path: 'modules',
+        component: () => import('@/views/modules/index.vue'),
+        name: '模块列表',
+        meta: {
+          title: '模块列表 | BBot Console',
+        },
+        children: [
+          {
+            name: '模块信息',
+            path: ':moduleId',
+            component: () => import('@/views/modules/detail.vue'),
+            meta: {
+              name: '模块详细信息',
+              title: '模块详细信息 | BBot Console',
+              requireAuth: true,
+            },
+          },
+        ],
       },
       {
         path: ':catchAll(.*)',

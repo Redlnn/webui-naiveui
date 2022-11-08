@@ -46,11 +46,12 @@ const route = useRoute()
     </div> -->
       <div style="display: flex; flex-direction: column; justify-content: center">
         <n-breadcrumb separator="/">
-          <n-breadcrumb-item v-for="(item, index) in route.matched" :key="index" :href="item.path"
-            >{{ item.name }}
+          <n-breadcrumb-item v-for="(item, index) in route.matched" :key="index">
+            <a v-if="route.name === item.name">{{ item.name }}</a>
+            <router-link :to="item.path" v-else>{{ item.name }}</router-link>
           </n-breadcrumb-item>
         </n-breadcrumb>
-        <div class="title">{{ route.name }}</div>
+        <div class="title">{{ route.meta.name ? route.meta.name : route.name }}</div>
       </div>
     </div>
     <div class="nav-items">

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, getCurrentInstance, reactive } from 'vue'
 import type { Ref } from 'vue'
-import { useElementSize } from '@vueuse/core'
 import { User, PaperPlane, UserFriends } from '@vicons/fa'
 import { RssFeedRound, TerminalTwotone } from '@vicons/material'
-import type { NScrollbar } from 'naive-ui'
+import type { LogInst } from 'naive-ui'
 import type { Type as BtnType } from 'naive-ui/es/button/src/interface'
 
 import ChartBar from '@/components/charts/ChartBar.vue'
@@ -16,13 +15,8 @@ const { proxy } = getCurrentInstance()!
 
 // === 实时日志 part1 start ===
 
-const log = ref<HTMLElement>()
-const logScrollbar = ref<typeof NScrollbar>()
-let canScroll
-const { height } = useElementSize(log)
-
-console.log(logScrollbar.value)
-onMounted(() => logScrollbar.value!.scrollTo(height.value))
+const logInst = ref<LogInst>()
+const canScroll = ref<boolean>(true)
 
 // === InfoCard start ===
 
@@ -97,49 +91,66 @@ onMounted(() => {
 
 // === 实时日志 part2 start ===
 
-function logScroll({ scrollTop }: { scrollLeft: number; scrollTop: number }) {
-  if (scrollTop + 520 < height.value) canScroll = false
-  else canScroll = true
+const scrollBtnText = ref('停止滚动')
+
+function stopLogScroll() {
+  if (canScroll.value) {
+    canScroll.value = false
+    scrollBtnText.value = '开始滚动'
+  } else {
+    canScroll.value = true
+    scrollBtnText.value = '停止滚动'
+  }
 }
 
-// watch(height, () => {
-//   if ((canScroll = true)) logScrollbar.value!.setScrollTop(height.value)
-// })
+function clearLog() {
+  log.splice(0, log.length)
+}
 
 const wsUrl = 'ws://127.0.0.1:8000/log'
 let ws: WebSocket
 
-const logBtnType: Ref<BtnType> = ref('success')
+const log = reactive<string[]>([])
+const logBtnType = ref<BtnType>('success')
 const logBtnText = ref('连接')
 const logBtnDisabled = ref(true)
 const wsStatus = ref(false)
 
+watch(log, () => {
+  if (canScroll.value === true) logInst.value?.scrollTo({ position: 'bottom', slient: true })
+})
+
 function createWSClient() {
   ws = new WebSocket(wsUrl)
   ws.onmessage = (e) => {
-    const data = JSON.parse(e.data)
-    if (log.value)
-      log.value.innerHTML += `\n[${data.record.time.repr.substring(0, 23)}] ${data.record.message}`
+    try {
+      const data = JSON.parse(e.data)
+      log.push(`[${data.record.time.repr.substring(0, 23)}] ${data.record.message}`)
+    } catch (err) {
+      const data = e.data
+      log.push(`[now] ${data}`)
+    }
   }
   ws.onopen = () => {
     console.log(`WebSocket 已连接到: ${wsUrl}`)
-    log.value!.innerHTML = `WebSocket 已连接到: ${wsUrl}`
+    log.push(`WebSocket 已连接到: ${wsUrl}`)
     logBtnType.value = 'error'
     logBtnText.value = '断开连接'
     wsStatus.value = true
     logBtnDisabled.value = false
   }
   ws.onclose = () => {
-    console.log('WebSocket 已断开连接')
-    log.value!.innerHTML += '\nWebSocket 已断开连接'
+    console.log('WebSocket 连接已断开')
+    log.push('WebSocket 连接已断开')
     logBtnType.value = 'primary'
     logBtnText.value = '重连'
     wsStatus.value = false
     logBtnDisabled.value = false
+    if (canScroll.value === true) logInst.value?.scrollTo({ position: 'bottom', slient: true })
   }
   // ws.onerror = (e) => {
   //   console.error(e)
-  //   log.value!.innerHTML += `\nWebSocket 连接错误`
+  //   log.value! += `\nWebSocket 连接错误`
   //   logBtnType.value = 'error'
   //   logBtnText.value = '重连'
   // }
@@ -175,8 +186,9 @@ onBeforeUnmount(() => {
             title="推送数量"
             :contain="homeData.push_count"
             :extra="homeData.all_push_count"
-            ><paper-plane
-          /></info-card>
+          >
+            <paper-plane />
+          </info-card>
         </n-grid-item>
       </n-grid>
     </div>
@@ -211,16 +223,27 @@ onBeforeUnmount(() => {
             :disabled="logBtnDisabled"
             style="transition: background-color 0.2s ease"
             @click="closeOrReconnectWS"
-            >{{ logBtnText }}</n-button
           >
+            {{ logBtnText }}
+          </n-button>
+          <n-button
+            size="small"
+            color="#8a2be2"
+            style="margin-left: 8px; transition: background-color 0.2s ease"
+            @click="stopLogScroll"
+          >
+            {{ scrollBtnText }}
+          </n-button>
+          <n-button
+            size="small"
+            color="#ff69b4"
+            style="margin-left: 8px; transition: background-color 0.2s ease"
+            @click="clearLog"
+          >
+            清除历史
+          </n-button>
         </p>
-        <n-scrollbar
-          ref="logScrollbar"
-          style="min-height: 200px; max-height: 500px"
-          @on-scroll="logScroll"
-        >
-          <pre ref="log"></pre>
-        </n-scrollbar>
+        <n-log ref="logInst" :rows="32" :lines="log" language="python3" />
       </div>
     </div>
   </section>

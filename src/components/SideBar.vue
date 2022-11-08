@@ -3,8 +3,8 @@ import { getCurrentInstance, watch, ref, onMounted, Ref } from 'vue'
 
 import { useTimeoutFn, useWindowSize } from '@vueuse/core'
 
-import { TerminalTwotone, GroupTwotone, SettingsTwotone, CropSquareSharp } from '@vicons/material'
-import { DashboardTwotone } from '@vicons/antd'
+import { DashboardTwotone, ApiTwotone, CompassTwotone } from '@vicons/antd'
+import { People24Filled } from '@vicons/fluent'
 
 const { width } = useWindowSize()
 const { proxy } = getCurrentInstance()!
@@ -68,19 +68,26 @@ watch(proxy!.$sidebarCollapsed, () => {
               <span class="menu-item__title">概览</span>
             </div>
           </router-link>
-          <router-link v-slot="{ isActive }" to="/group">
+          <router-link v-slot="{ isActive }" to="/groups">
             <div class="menu-item" :class="isActive ? 'active' : ''">
               <span class="menu-item__icon">
-                <group-twotone />
+                <People24Filled />
               </span>
               <span class="menu-item__title">群组</span>
             </div>
           </router-link>
+          <router-link v-slot="{ isActive }" to="/modules">
+            <div class="menu-item" :class="isActive ? 'active' : ''">
+              <span class="menu-item__icon">
+                <api-twotone />
+              </span>
+              <span class="menu-item__title">模块</span>
+            </div>
+          </router-link>
         </section>
         <div class="sidebar__btn">
-          <span><settings-twotone /></span>
           <span @click="toggleRoundSidebar">
-            <span><crop-square-sharp /></span>
+            <span><compass-twotone /></span>
           </span>
         </div>
       </div>
